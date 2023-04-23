@@ -65,7 +65,7 @@ class App:
         self.total_trades_label = ttk.Label(main_frame, text=f"Total Trades: {self.total_trades}")
         self.total_trades_label.pack()
 
-        self.stocktotrade = tk.Label(left_frame, text="Stocks To Trade", font=("Helvetica", 16))
+        self.stocktotrade = tk.Label(left_frame, text="Stocks To Trade:", font=("Helvetica", 16))
         self.stocktotrade.pack(anchor='w')
 
         self.spy_checkbox = ttk.Checkbutton(left_frame, text="Detect SPY Trades", variable=self.detect_spy)
@@ -104,11 +104,29 @@ class App:
         self.detect_button = ttk.Button(left_frame, text="Start Detection", command=self.toggle_detection)
         self.detect_button.pack(anchor='w')
 
+        self.available_funds_label = ttk.Label(main_frame, text="")
+        self.available_funds_label.pack()
+
+
         self.detecting = False
 
         self.ib = None
         self.contract = None
         self.connect_ib()
+
+    def get_available_funds(self):
+        account_summary = self.ib.accountSummary()
+        available_funds = None
+        for summary in account_summary:
+            if summary.tag == "AvailableFunds":
+                available_funds = float(summary.value)
+                break
+        return available_funds
+
+    def update_available_funds(self):
+        available_funds = self.get_available_funds()
+        self.available_funds_label.config(text=f"Available Funds: ${available_funds:,.2f}")
+
 
     def connect_ib(self):
         self.ib = IB()
@@ -141,6 +159,7 @@ class App:
             self.detecting = True
             self.detect_button.config(text="Stop Detection")
             self.root.after(0, self.detect_text)
+            self.update_available_funds()
 
     def detect_text(self):
         if not self.detecting:
@@ -225,6 +244,7 @@ class App:
                     self.open_trades[symbol] = False
                     self.total_trades += 1
                     self.total_trades_label.config(text=f"Total Trades: {self.total_trades}")
+                    self.update_available_funds()
 
 # Update the image label with the latest screenshot
         img = PILImage.fromarray(np.array(img))
