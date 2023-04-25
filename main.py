@@ -36,7 +36,8 @@ class App:
         self.open_trades = {'SPY': False, 'SPX': False, 'AAPL': False, 'TSLA': False, 'AMZN': False, 'MSFT': False,
                             'NVDA': False, 'AMD': False, 'META': False, 'NFLX': False, 'QQQ': False}
         self.opened_trade_details = {'SPY': {}, 'SPX': {}, 'AAPL': {}, 'TSLA': {}, 'AMZN': {}, 'MSFT': {}, 'NVDA': {},
-                                     'AMD': {}, 'META': {}, 'NFLX': {}, 'QQQ': {}}
+                                     'AMD': {}, 'META': {}, 'NFLX': {}, 'QQQ': {}, 'SQ': {}, 'SHOP': {}, 'BA': {},
+                                     'XOM': {}, 'WMT': {}, 'HD': {}, 'COIN': {}}
         # ...
 
         self.detect_spy = tk.BooleanVar(value=True)
@@ -50,6 +51,13 @@ class App:
         self.detect_meta = tk.BooleanVar(value=True)
         self.detect_nflx = tk.BooleanVar(value=True)
         self.detect_qqq = tk.BooleanVar(value=True)
+        self.detect_sq = tk.BooleanVar(value=True)
+        self.detect_shop = tk.BooleanVar(value=True)
+        self.detect_ba = tk.BooleanVar(value=True)
+        self.detect_xom = tk.BooleanVar(value=True)
+        self.detect_wmt = tk.BooleanVar(value=True)
+        self.detect_hd = tk.BooleanVar(value=True)
+        self.detect_coin = tk.BooleanVar(value=True)
 
         self.total_trades = 0
 
@@ -101,6 +109,27 @@ class App:
         self.qqq_checkbox = ttk.Checkbutton(left_frame, text="Detect QQQ Trades", variable=self.detect_qqq)
         self.qqq_checkbox.pack(anchor='w')
 
+        self.sq_checkbox = ttk.Checkbutton(left_frame, text="Detect SQ Trades", variable=self.detect_sq)
+        self.sq_checkbox.pack(anchor='w')
+
+        self.shop_checkbox = ttk.Checkbutton(left_frame, text="Detect SHOP Trades", variable=self.detect_shop)
+        self.shop_checkbox.pack(anchor='w')
+
+        self.ba_checkbox = ttk.Checkbutton(left_frame, text="Detect BA Trades", variable=self.detect_ba)
+        self.ba_checkbox.pack(anchor='w')
+
+        self.xom_checkbox = ttk.Checkbutton(left_frame, text="Detect XOM Trades", variable=self.detect_xom)
+        self.xom_checkbox.pack(anchor='w')
+
+        self.wmt_checkbox = ttk.Checkbutton(left_frame, text="Detect WMT Trades", variable=self.detect_wmt)
+        self.wmt_checkbox.pack(anchor='w')
+
+        self.hd_checkbox = ttk.Checkbutton(left_frame, text="Detect HD Trades", variable=self.detect_hd)
+        self.hd_checkbox.pack(anchor='w')
+
+        self.coin_checkbox = ttk.Checkbutton(left_frame, text="Detect COIN Trades", variable=self.detect_coin)
+        self.coin_checkbox.pack(anchor='w')
+
         self.detect_button = ttk.Button(left_frame, text="Start Detection", command=self.toggle_detection)
         self.detect_button.pack(anchor='w')
 
@@ -141,7 +170,14 @@ class App:
                                 'AMD': Stock('AMD', 'SMART', 'USD'),
                                 'META': Stock('META', 'SMART', 'USD'),
                                 'NFLX': Stock('NFLX', 'SMART', 'USD'),
-                                'QQQ': Stock('QQQ', 'SMART', 'USD')}
+                                'QQQ': Stock('QQQ', 'SMART', 'USD'),
+                                'SQ': Stock('SQ', 'SMART', 'USD'),
+                                'SHOP': Stock('SHOP', 'SMART', 'USD'),
+                                'BA': Stock('BA', 'SMART', 'USD'),
+                                'XOM': Stock('XOM', 'SMART', 'USD'),
+                                'WMT': Stock('WMT', 'SMART', 'USD'),
+                                'HD': Stock('HD', 'SMART', 'USD'),
+                                'COIN': Stock('COIN', 'SMART', 'USD')}
 
     def place_order(self, action, quantity, symbol, strike, expiry, option_type):
         option_contract = Option(symbol, expiry, strike, option_type, 'SMART')
@@ -175,7 +211,7 @@ class App:
 
         self.detected_label.config(text=text)
 
-        bto_match = re.search(r'.*[Bb][TtI][Oo]\s*\d*\s*(SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ)\s*\d+([CcPp])', text, re.IGNORECASE)
+        bto_match = re.search(r'.*[Bb][TtI][Oo]\s*\d*\s*(SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|XOM|WMT|HD|COIN)\s*\d+([CcPp])', text, re.IGNORECASE)
         if bto_match:
             symbol = bto_match.group(1).upper()
 
@@ -189,12 +225,19 @@ class App:
                     (symbol == 'AMD' and self.detect_amd.get() and not self.open_trades['AMD']) or \
                     (symbol == 'META' and self.detect_meta.get() and not self.open_trades['META']) or \
                     (symbol == 'NFLX' and self.detect_nflx.get() and not self.open_trades['NFLX']) or \
-                    (symbol == 'QQQ' and self.detect_qqq.get() and not self.open_trades['QQQ']):
-                strike_price = re.search(r'[Bb][TtI][Oo]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ)\s*(\d+)[CcPp]', text,
+                    (symbol == 'QQQ' and self.detect_qqq.get() and not self.open_trades['QQQ']) or \
+                    (symbol == 'SQ' and self.detect_sq.get() and not self.open_trades['SQ']) or \
+                    (symbol == 'SHOP' and self.detect_shop.get() and not self.open_trades['SHOP']) or \
+                    (symbol == 'BA' and self.detect_ba.get() and not self.open_trades['BA']) or \
+                    (symbol == 'XOM' and self.detect_xom.get() and not self.open_trades['XOM']) or \
+                    (symbol == 'WMT' and self.detect_wmt.get() and not self.open_trades['WMT']) or \
+                    (symbol == 'HD' and self.detect_hd.get() and not self.open_trades['HD']) or \
+                    (symbol == 'COIN' and self.detect_coin.get() and not self.open_trades['COIN']):
+                strike_price = re.search(r'[Bb][TtI][Oo]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|XOM|WMT|HD|COIN)\s*(\d+)[CcPp]', text,
                                      re.IGNORECASE).group(1)
-                option_type = re.search(r'[Bb][TtI][Oo]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ)\s*\d+([CcPp])', text,
+                option_type = re.search(r'[Bb][TtI][Oo]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|XOM|WMT|HD|COIN)\s*\d+([CcPp])', text,
                                     re.IGNORECASE).group(1)
-                expiry_date_match = re.search(r'.*[Bb][TtI][Oo]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ).*\d+[CcPp]\s+((?:\d{4}/)?\d{2}/\d{2})', text,
+                expiry_date_match = re.search(r'.*[Bb][TtI][Oo]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|XOM|WMT|HD|COIN).*\d+[CcPp]\s+((?:\d{4}/)?\d{2}/\d{2})', text,
                     re.IGNORECASE)
                 if expiry_date_match:
                     expiry_date = expiry_date_match.group(1)
@@ -215,17 +258,17 @@ class App:
                                                          'option_type': option_type.upper(),
                                                          'expiry_date': expiry_date}
 
-        stc_match = re.search(r'[Ss][Tt][Cc]\s*\d*\s*(SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ)\s*\d+([CcPp])', text, re.IGNORECASE)
+        stc_match = re.search(r'[Ss][Tt][Cc]\s*\d*\s*(SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|XOM|WMT|HD|COIN)\s*\d+([CcPp])', text, re.IGNORECASE)
         if stc_match:
             symbol = stc_match.group(1).upper()
 
             if self.open_trades[symbol]:
-                strike_price = re.search(r'[Ss][Tt][Cce]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ)\s*(\d+)[CcPp]', text,
+                strike_price = re.search(r'[Ss][Tt][Cce]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|XOM|WMT|HD|COIN)\s*(\d+)[CcPp]', text,
                                          re.IGNORECASE).group(1)
-                option_type = re.search(r'[Ss][Tt][Cc]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ)\s*\d+([CcPp])', text,
+                option_type = re.search(r'[Ss][Tt][Cc]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|XOM|WMT|HD|COIN)\s*\d+([CcPp])', text,
                                         re.IGNORECASE).group(1)
                 expiry_date_match = re.search(
-                    r'[Ss][Tt][Cc]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ)\s*\d+[CcPp]\s+((?:\d{4}/)?\d{2}/\d{2})',text, re.IGNORECASE)
+                    r'[Ss][Tt][Cc]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|XOM|WMT|HD|COIN)\s*\d+[CcPp]\s+((?:\d{4}/)?\d{2}/\d{2})',text, re.IGNORECASE)
 
                 if expiry_date_match:
                     expiry_date = expiry_date_match.group(1)
