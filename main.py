@@ -31,13 +31,13 @@ class App:
         right_frame = ttk.Frame(self.root)
         right_frame.grid(row=0, column=2, sticky="nswe")
 
-        self.x, self.y, self.width, self.height = 360, 570, 280, 75
+        self.x, self.y, self.width, self.height = 360, 570, 300, 75
 
         self.open_trades = {'SPY': False, 'SPX': False, 'AAPL': False, 'TSLA': False, 'AMZN': False, 'MSFT': False,
-                            'NVDA': False, 'AMD': False, 'META': False, 'NFLX': False, 'QQQ': False}
+                            'NVDA': False, 'AMD': False, 'META': False, 'NFLX': False, 'QQQ': False, 'XOM': False}
         self.opened_trade_details = {'SPY': {}, 'SPX': {}, 'AAPL': {}, 'TSLA': {}, 'AMZN': {}, 'MSFT': {}, 'NVDA': {},
                                      'AMD': {}, 'META': {}, 'NFLX': {}, 'QQQ': {}, 'SQ': {}, 'SHOP': {}, 'BA': {},
-                                    'WMT': {}, 'HD': {}, 'COIN': {}}
+                                    'WMT': {}, 'HD': {}, 'COIN': {}, 'XOM': {}}
         # ...
 
         self.detect_spy = tk.BooleanVar(value=True)
@@ -57,6 +57,7 @@ class App:
         self.detect_wmt = tk.BooleanVar(value=True)
         self.detect_hd = tk.BooleanVar(value=True)
         self.detect_coin = tk.BooleanVar(value=True)
+        self.detect_xom = tk.BooleanVar(value=True)
 
         self.total_trades = 0
 
@@ -126,6 +127,9 @@ class App:
         self.coin_checkbox = ttk.Checkbutton(left_frame, text="Detect COIN Trades", variable=self.detect_coin)
         self.coin_checkbox.pack(anchor='w')
 
+        self.xom_checkbox = ttk.Checkbutton(left_frame, text="Detect XOM Trades", variable=self.detect_xom)
+        self.xom_checkbox.pack(anchor='w')
+
         self.detect_button = ttk.Button(left_frame, text="Start Detection", command=self.toggle_detection)
         self.detect_button.pack(anchor='w')
 
@@ -172,7 +176,8 @@ class App:
                                 'BA': Stock('BA', 'SMART', 'USD'),
                                 'WMT': Stock('WMT', 'SMART', 'USD'),
                                 'HD': Stock('HD', 'SMART', 'USD'),
-                                'COIN': Stock('COIN', 'SMART', 'USD')}
+                                'COIN': Stock('COIN', 'SMART', 'USD'),
+                                'XOM': Stock('XOM', 'SMART', 'USD')}
 
     def place_order(self, action, quantity, symbol, strike, expiry, option_type):
         option_contract = Option(symbol, expiry, strike, option_type, 'SMART')
@@ -203,12 +208,14 @@ class App:
         text = pytesseract.image_to_string(PILImage.fromarray(thresh))
 
         text = text.replace('¢', 'c')
+        text = text.replace('e', 'c')
 
         self.detected_label.config(text=text)
 
-        bto_match = re.search(r'.*[Bb][TtI][Oo]\s*\d*\s*(SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|WMT|HD|COIN)\s*\d+([CcPp])', text, re.IGNORECASE)
+        bto_match = re.search(r'.*[Bb][TtI][Oo]\s*\d*\s*(SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|Q0Q|0QQ|QQQ|00Q|SQ|SHOP|BA|WMT|HD|COIN|XOM)\s*\d+(\.5)?([CcPp])', text, re.IGNORECASE)
         if bto_match:
             symbol = bto_match.group(1).upper()
+            symbol = symbol.replace('0', 'Q')
 
             if (symbol == 'SPY' and self.detect_spy.get() and not self.open_trades['SPY']) or \
                     (symbol == 'SPX' and self.detect_spx.get() and not self.open_trades['SPX']) or \
@@ -226,17 +233,18 @@ class App:
                     (symbol == 'BA' and self.detect_ba.get() and not self.open_trades['BA']) or \
                     (symbol == 'WMT' and self.detect_wmt.get() and not self.open_trades['WMT']) or \
                     (symbol == 'HD' and self.detect_hd.get() and not self.open_trades['HD']) or \
-                    (symbol == 'COIN' and self.detect_coin.get() and not self.open_trades['COIN']):
-                strike_price = re.search(r'[Bb][TtI][Oo]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|WMT|HD|COIN)\s*(\d+)[CcPp]', text,
-                                     re.IGNORECASE).group(1)
-                option_type = re.search(r'[Bb][TtI][Oo]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|WMT|HD|COIN)\s*\d+([CcPp])', text,
-                                    re.IGNORECASE).group(1)
-                expiry_date_match = re.search(
-                    r'[Bb][Tt][Oo]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|WMT|HD|COIN)\s*\d+[CcPp]\s+((?:\d{4}/)?(?:0?\d)/\d{1,2})',
-                    text, re.IGNORECASE)
-
+                    (symbol == 'COIN' and self.detect_coin.get() and not self.open_trades['COIN']) or \
+                    (symbol == 'XOM' and self.detect_xom.get() and not self.open_trades['XOM']):
+                strike_price = re.search(r'[Bb][TtI][Oo]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|Q0Q|0QQ|QQQ|00Q|SQ|SHOP|BA|WMT|HD|COIN|XOM)\s*(\d+(\.5)?)[CcPp]',text,
+                    re.IGNORECASE).group(1)
+                option_type = re.search(
+                    r'[Bb][TtI][Oo]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|Q0Q|0QQ|QQQ|00Q|SQ|SHOP|BA|WMT|HD|COIN|XOM)\s*\d+(\.5)?([CcPp])',
+                    text,
+                    re.IGNORECASE).group(2)
+                expiry_date_match = re.search(r'[Bb][Tt][Oo]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|Q0Q|0QQ|QQQ|00Q|SQ|SHOP|BA|WMT|HD|COIN|XOM)\s*\d+(\.5)?[CcPp]\s+((?:\d{4}/)?(?:0?\d)/\d{1,2})', text, re.IGNORECASE)
                 if expiry_date_match:
-                    expiry_date = expiry_date_match.group(1)
+                    expiry_date = expiry_date_match.group(2)
+                    expiry_date = expiry_date.replace('.5', '')  # remove the ".5" from the expiry date
                     expiry_date = datetime.strptime(f"{expiry_date}/2023", "%m/%d/%Y").strftime("%Y%m%d")
                 else:
                 # Handle the case when the regex pattern does not match
@@ -254,21 +262,26 @@ class App:
                                                          'option_type': option_type.upper(),
                                                          'expiry_date': expiry_date}
 
-        stc_match = re.search(r'[Ss][Tt][Cc]\s*\d*\s*(SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|WMT|HD|COIN)\s*\d+([CcPp])', text, re.IGNORECASE)
+        stc_match = re.search(r'[Ss][Tt][Cc]\s*\d*\s*(SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|Q0Q|0QQ|QQQ|00Q|SQ|SHOP|BA|WMT|HD|COIN|XOM)\s*\d+(\.5)?([CcPp])', text, re.IGNORECASE)
         if stc_match:
             symbol = stc_match.group(1).upper()
+            symbol = symbol.replace('0', 'Q')
 
             if self.open_trades[symbol]:
-                strike_price = re.search(r'[Ss][Tt][Cce]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|WMT|HD|COIN)\s*(\d+)[CcPp]', text,
-                                         re.IGNORECASE).group(1)
-                option_type = re.search(r'[Ss][Tt][Cc]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|WMT|HD|COIN)\s*\d+([CcPp])', text,
-                                        re.IGNORECASE).group(1)
+                strike_price = re.search(
+                    r'[Ss][TtI][Cce]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|Q0Q|0QQ|QQQ|00Q|SQ|SHOP|BA|WMT|HD|COIN|XOM)\s*(\d+(\.5)?)[CcPp]',
+                    text,
+                    re.IGNORECASE).group(1)
+                option_type = re.search(
+                    r'[Ss][TtI][Cce]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|Q0Q|0QQ|QQQ|00Q|SQ|SHOP|BA|WMT|HD|COIN|XOM)\s*\d+(\.5)?([CcPp])',
+                    text,
+                    re.IGNORECASE).group(2)
                 expiry_date_match = re.search(
-                    r'[Ss][Tt][Cc]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|QQQ|SQ|SHOP|BA|WMT|HD|COIN)\s*\d+[CcPp]\s+((?:\d{4}/)?(?:0?\d)/\d{2})',
+                    r'[Ss][TtI][Cce]\s*\d*\s*(?:SPY|SPX|AAPL|TSLA|AMZN|MSFT|NVDA|AMD|META|NFLX|Q0Q|0QQ|QQQ|00Q|SQ|SHOP|BA|WMT|HD|COIN|XOM)\s*\d+(\.5)?[CcPp]\s+((?:\d{4}/)?(?:0?\d)/\d{1,2})',
                     text, re.IGNORECASE)
-
                 if expiry_date_match:
-                    expiry_date = expiry_date_match.group(1)
+                    expiry_date = expiry_date_match.group(2)
+                    expiry_date = expiry_date.replace('.5', '')  # remove the ".5" from the expiry date
                     expiry_date = datetime.strptime(f"{expiry_date}/2023", "%m/%d/%Y").strftime("%Y%m%d")
                 else:
                     return
